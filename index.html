@@ -1,54 +1,155 @@
 <!DOCTYPE html>
 <html>
 
-  <head>
-    <meta charset='utf-8' />
-    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="description" content="CGWin : Custom Google Info Windows" />
+<head>
+    <meta charset='utf-8'/>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
+    <meta name="description" content="CGWin : Custom Google Info Windows"/>
+    <script type="application/javascript" src="javascripts/cGWin.js"></script>
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/cGWin.css" />
 
     <title>CGWin</title>
-  </head>
+</head>
 
-  <body>
+<body>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/SaneMethod/CGWin">View on GitHub</a>
+<!-- HEADER -->
+<div id="header_wrap" class="outer">
+    <header class="inner">
+        <a id="forkme_banner" href="https://github.com/SaneMethod/CGWin">View on GitHub</a>
 
-          <h1 id="project_title">CGWin</h1>
-          <h2 id="project_tagline">Custom Google Info Windows</h2>
+        <h1 id="project_title">CGWin</h1>
 
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/SaneMethod/CGWin/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/SaneMethod/CGWin/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
+        <h2 id="project_tagline">Custom Google Info Windows</h2>
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
+        <section id="downloads">
+            <a class="zip_download_link" href="https://github.com/SaneMethod/CGWin/zipball/master">Download this project
+                as a .zip file</a>
+            <a class="tar_download_link" href="https://github.com/SaneMethod/CGWin/tarball/master">Download this project
+                as a tar.gz file</a>
+        </section>
+    </header>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main_content_wrap" class="outer">
+    <section id="main_content" class="inner">
         <h1>
-<a name="cgwin" class="anchor" href="#cgwin"><span class="octicon octicon-link"></span></a>CGWin</h1>
+            <a name="cgwin" class="anchor" href="#cgwin"><span class="octicon octicon-link"></span></a>CGWin</h1>
 
-<p>(Custom Google Info Window)</p>
+        <p>(Custom Google Info Window)</p>
 
-<p>An implementation of a custom google info window that can be attached to markers for displaying detailed information thereabout. See <a href="http://www.artandlogic.com/blog/2014/02/custom-google-maps-info-windows/">this post</a> for more details on usage and what CGWin has to offer.</p>
-      </section>
-    </div>
+        <p>An implementation of a custom google info window that can be attached to markers for displaying detailed
+            information thereabout. See
+            <a href="http://www.artandlogic.com/blog/2014/02/custom-google-maps-info-windows/">this post</a> for
+            more details on usage and what CGWin has to offer.</p>
+        <p>See below for a live example, and page source for usage:</p>
+    </section>
+    <section class="inner">
+        <div id="infoContent" style="display:none;">
+            <div class="map-info-close">x</div>
+            <h5>Custom Info Window</h5>
+            <p>For Google Maps.</p>
+            <h5>Just HTML</h5>
+            <p>Your info content window could contain anything.</p>
+        </div>
+        <div id="mapContainer" style="width:800px;height:500px;"></div>
+    </section>
+</div>
 
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
+<!-- FOOTER  -->
+<div id="footer_wrap" class="outer">
+    <footer class="inner">
         <p class="copyright">CGWin maintained by <a href="https://github.com/SaneMethod">SaneMethod</a></p>
+
         <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
+    </footer>
+</div>
 
-    
+<script type="application/javascript">
+    function GMaps(opts){
+        this.mapReady = false;
+        this.options = opts;
+        this.appendGMaps(opts.apiKey, opts.sensor);
+    }
 
-  </body>
+    GMaps.prototype.appendGMaps = function(apiKey, sensor){
+        var script = document.createElement('script'),
+            key = (apiKey) ? '&key='+apiKey : '';
+        script.type = 'application/javascript';
+        script.src = 'http://maps.googleapis.com/maps/api/js?v=3'+key+'&sensor='+sensor
+                         +'&callback=gMaps.init';
+        document.getElementsByTagName('head')[0].appendChild(script);
+    };
+
+    GMaps.prototype.init = function(){
+        this.mapReady = true;
+        this.infoWindow = new (GenCustomWindow())();
+        this.markers = [];
+        this.map = new google.maps.Map(this.options.el, {
+            zoom:4,
+            maxZoom:16,
+            center:new google.maps.LatLng(40.45951094, -94.78503749),
+            mapTypeId:google.maps.MapTypeId.ROADMAP
+        });
+
+        this.scatterMarkers();
+    };
+
+    /**
+     * Create some markers at random points in NA, and attach an event to each to show our custom info
+     * window when clicked.
+     */
+    GMaps.prototype.scatterMarkers = function(){
+        var mRng = {lat:[51, 38], lng:[-74, -122]}, // Keep generated lat/lng inside North American landmass
+            lat,
+            lng;
+
+        for (var i=0, len=this.options.markerCount; i < len; i++)
+        {
+            lat = (Math.random() * (mRng.lat[0] - mRng.lat[1]) + mRng.lat[1]);
+            lng = (Math.random() * (mRng.lng[0] - mRng.lng[1]) + mRng.lng[1]);
+            this.setMarker(this.map, {lat:lat, lng:lng});
+        }
+    };
+
+    GMaps.prototype.setMarker = function(map, pos){
+        var opts = {
+            map:map,
+            position:new google.maps.LatLng(pos.lat, pos.lng),
+            draggable:false,
+            icon:{
+                url:'./images/pinTemplate.png',
+                size:new google.maps.Size(44, 80),
+                scaledSize:new google.maps.Size(22, 40),
+                anchor:new google.maps.Point(10, 40)
+            }
+        },
+            count = this.markers.push(new google.maps.Marker(opts)) - 1,
+            marker = this.markers[count],
+            infoWindow = this.infoWindow;
+
+        google.maps.event.addListener(marker, 'click', function(){
+            infoWindow.setContent(document.getElementById('infoContent').innerHTML);
+            infoWindow.open(map, marker);
+        });
+    };
+
+    (function(){
+        document.addEventListener('DOMContentLoaded', function(){
+            var mapEl = document.getElementById('mapContainer');
+
+            gMaps = new GMaps({
+                el:mapEl,
+                apiKey:'',
+                sensor:false,
+                markerCount:10
+            });
+        });
+    })();
+    var gMaps;
+</script>
+</body>
 </html>
