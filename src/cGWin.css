@@ -1,0 +1,29 @@
+.map-info-window{
+    background: #e9e9e9;
+    border-radius:4px;
+    box-shadow:8px 8px 16px #222;
+    color: #232323;
+    min-width:150px;
+    max-width:200px;
+    max-height:300px;
+    text-align:center;
+    padding:5px 20px 10px;
+    overflow:hidden;
+    position:absolute;
+    text-transform:uppercase;
+}
+
+.map-info-window .map-info-close{
+    float:right;
+    cursor:pointer;
+    margin-right:-5px;
+    margin-left:5px;
+}
+
+.map-info-window h5{
+    font-weight:bold;
+}
+
+.map-info-window p{
+    color: #000;
+}
